@@ -23,6 +23,7 @@ export default function RegisterCase() {
   const [visitType, setVisitType] = useState('realizada');
   const [currentDate, setCurrentDate] = useState(getLocalDateString());
   const [showEquipmentChange, setShowEquipmentChange] = useState(false);
+  const [equipmentChangeType, setEquipmentChangeType] = useState('reemplazo'); // 'reemplazo' or 'robo_perdida'
 
   // AF recogido lookup
   const [afRecogido, setAfRecogido] = useState('');
@@ -97,8 +98,17 @@ export default function RegisterCase() {
         form.reset();
         setIncidencia('');
         setShowEquipmentChange(false);
+        setEquipmentChangeType('reemplazo');
         setVisitType('realizada');
         setCurrentDate(getLocalDateString());
+        setAfRecogido('');
+        setModeloRecogido('');
+        setSerieAntigua('');
+        setRecogidoFound(false);
+        setAfInstalado('');
+        setModeloInstalado('');
+        setSerieNueva('');
+        setInstaladoFound(false);
       } else {
         alert('Error: ' + (result.error || 'Error desconocido'));
       }
@@ -352,68 +362,155 @@ export default function RegisterCase() {
                           className="overflow-hidden"
                         >
                           <div className="pt-4 border-t border-white/5 space-y-6">
-                            {/* Fila Recogido */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">AF Recogido:</label>
-                                <div className="relative">
-                                  <input type="text" name="af_recogido" value={afRecogido} onChange={(e) => handleAfRecogidoChange(e.target.value)} placeholder="10124277" className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 pr-8 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                                  {lookingRecogido && <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }} className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-400"><Search size={14} /></motion.div>}
+                            
+                            {/* Selector de Tipo de Cambio de Equipo */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
+                              <label className="flex items-center gap-3 cursor-pointer group">
+                                <input 
+                                  type="radio" 
+                                  name="tipo_cambio_equipo" 
+                                  value="reemplazo" 
+                                  checked={equipmentChangeType === 'reemplazo'} 
+                                  onChange={() => setEquipmentChangeType('reemplazo')}
+                                  className="hidden"
+                                />
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${equipmentChangeType === 'reemplazo' ? 'border-blue-500 bg-blue-500' : 'border-gray-600'}`}>
+                                  {equipmentChangeType === 'reemplazo' && <CheckCircle2 size={12} className="text-white" />}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className={`text-sm font-medium ${equipmentChangeType === 'reemplazo' ? 'text-white' : 'text-gray-400'}`}>Reemplazo Estándar</span>
+                                  <span className="text-[10px] text-gray-500">Se recoge el equipo antiguo del cliente</span>
+                                </div>
+                              </label>
+
+                              <label className="flex items-center gap-3 cursor-pointer group">
+                                <input 
+                                  type="radio" 
+                                  name="tipo_cambio_equipo" 
+                                  value="robo_perdida" 
+                                  checked={equipmentChangeType === 'robo_perdida'} 
+                                  onChange={() => setEquipmentChangeType('robo_perdida')}
+                                  className="hidden"
+                                />
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${equipmentChangeType === 'robo_perdida' ? 'border-amber-500 bg-amber-500' : 'border-gray-600'}`}>
+                                  {equipmentChangeType === 'robo_perdida' && <AlertTriangle size={12} className="text-black" />}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className={`text-sm font-medium ${equipmentChangeType === 'robo_perdida' ? 'text-white' : 'text-gray-400'}`}>Robo o Pérdida</span>
+                                  <span className="text-[10px] text-gray-500">Reposición sin recuperar el equipo antiguo</span>
+                                </div>
+                              </label>
+                            </div>
+
+                            {equipmentChangeType === 'reemplazo' ? (
+                              /* Fila Recogido */
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">AF Recogido:</label>
+                                  <div className="relative">
+                                    <input 
+                                      type="text" 
+                                      name="af_recogido" 
+                                      value={afRecogido} 
+                                      onChange={(e) => handleAfRecogidoChange(e.target.value)} 
+                                      placeholder="10124277" 
+                                      required={equipmentChangeType === 'reemplazo'}
+                                      pattern="\d{8}"
+                                      title="El AF debe ser un número de exactamente 8 dígitos"
+                                      className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 pr-8 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                    />
+                                    {lookingRecogido && <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }} className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-400"><Search size={14} /></motion.div>}
+                                  </div>
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Modelo Equipo Recogido:</label>
+                                  {recogidoFound ? (
+                                    <>
+                                      <input type="hidden" name="modelo_recogido" value={modeloRecogido} />
+                                      <input type="text" value={modeloRecogido} disabled className="w-full bg-white/5 border border-white/5 rounded-lg py-2 px-3 text-sm text-gray-500 cursor-not-allowed opacity-70" />
+                                    </>
+                                  ) : (
+                                    <select 
+                                      required={equipmentChangeType === 'reemplazo'} 
+                                      name="modelo_recogido" 
+                                      value={modeloRecogido} 
+                                      onChange={(e) => setModeloRecogido(e.target.value)} 
+                                      className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    >
+                                      <option value="">-- Selecciona --</option>
+                                      <optgroup label="VDSL">
+                                        <option value="ZXHN H168N">ZXHN H168N (VDSL)</option>
+                                        <option value="ZXHN H168A">ZXHN H168A (VDSL)</option>
+                                        <option value="VR530V">VR530V (VDSL)</option>
+                                      </optgroup>
+                                      <optgroup label="GPON">
+                                        <option value="ZXHN F660">ZXHN F660 (GPON)</option>
+                                        <option value="ZXHN F670L">ZXHN F670L (GPON)</option>
+                                      </optgroup>
+                                    </select>
+                                  )}
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Serie Antigua:</label>
+                                  {recogidoFound ? (
+                                    <>
+                                      <input type="hidden" name="serie_antigua" value={serieAntigua} />
+                                      <input type="text" value={serieAntigua} disabled className="w-full bg-white/5 border border-white/5 rounded-lg py-2 px-3 text-sm text-gray-500 font-mono cursor-not-allowed opacity-70" />
+                                    </>
+                                  ) : (
+                                    <input 
+                                      type="text" 
+                                      name="serie_antigua" 
+                                      value={serieAntigua} 
+                                      onChange={(e) => setSerieAntigua(e.target.value.toUpperCase())} 
+                                      placeholder="ZTEGC4D3374A" 
+                                      required={equipmentChangeType === 'reemplazo'}
+                                      className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                    />
+                                  )}
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Estado Equipo Recogido:</label>
+                                  <select name="estado_recogido" className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                    <option value="">-- Selecciona estado --</option>
+                                    <option value="Funcional" className="bg-[#0F172A]">✅ Funcional</option>
+                                    <option value="Dañado" className="bg-[#0F172A]">❌ Dañado</option>
+                                    <option value="Dañado por tormenta" className="bg-[#0F172A]">⚡ Dañado por tormenta</option>
+                                    <option value="Para revision" className="bg-[#0F172A]">Para revision</option>
+                                    <option value="Obsoleto" className="bg-[#0F172A]">Obsoleto</option>
+                                    <option value="En blanco" className="bg-[#0F172A]">📄 En blanco (sin especificar)</option>
+                                  </select>
                                 </div>
                               </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Modelo Equipo Recogido:</label>
-                                {recogidoFound ? (
-                                  <>
-                                    <input type="hidden" name="modelo_recogido" value={modeloRecogido} />
-                                    <input type="text" value={modeloRecogido} disabled className="w-full bg-white/5 border border-white/5 rounded-lg py-2 px-3 text-sm text-gray-500 cursor-not-allowed opacity-70" />
-                                  </>
-                                ) : (
-                                  <select required name="modelo_recogido" value={modeloRecogido} onChange={(e) => setModeloRecogido(e.target.value)} className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
-                                    <option value="">-- Selecciona --</option>
-                                    <optgroup label="VDSL">
-                                      <option value="ZXHN H168N">ZXHN H168N (VDSL)</option>
-                                      <option value="ZXHN H168A">ZXHN H168A (VDSL)</option>
-                                      <option value="VR530V">VR530V (VDSL)</option>
-                                    </optgroup>
-                                    <optgroup label="GPON">
-                                      <option value="ZXHN F660">ZXHN F660 (GPON)</option>
-                                      <option value="ZXHN F670L">ZXHN F670L (GPON)</option>
-                                    </optgroup>
-                                  </select>
-                                )}
+                            ) : (
+                              /* Alerta de Robo o Pérdida */
+                              <div className="flex items-start gap-3 bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl text-amber-200">
+                                <AlertTriangle size={20} className="shrink-0 mt-0.5" />
+                                <div>
+                                  <h4 className="text-sm font-semibold">Caso de Robo o Pérdida de Equipo</h4>
+                                  <p className="text-xs text-amber-300/80 mt-1">
+                                    No se solicita la información del equipo recogido ya que el cliente no dispone del mismo. Solo se registrará el nuevo equipo instalado.
+                                  </p>
+                                </div>
                               </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Serie Antigua:</label>
-                                {recogidoFound ? (
-                                  <>
-                                    <input type="hidden" name="serie_antigua" value={serieAntigua} />
-                                    <input type="text" value={serieAntigua} disabled className="w-full bg-white/5 border border-white/5 rounded-lg py-2 px-3 text-sm text-gray-500 font-mono cursor-not-allowed opacity-70" />
-                                  </>
-                                ) : (
-                                  <input type="text" name="serie_antigua" value={serieAntigua} onChange={(e) => setSerieAntigua(e.target.value.toUpperCase())} placeholder="ZTEGC4D3374A" className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                                )}
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Estado Equipo Recogido:</label>
-                                <select name="estado_recogido" className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
-                                  <option value="">-- Selecciona estado --</option>
-                                  <option value="Funcional" className="bg-[#0F172A]">✅ Funcional</option>
-                                  <option value="Dañado" className="bg-[#0F172A]">❌ Dañado</option>
-                                  <option value="Dañado por tormenta" className="bg-[#0F172A]">⚡ Dañado por tormenta</option>
-                                  <option value="Para revision" className="bg-[#0F172A]">Para revision</option>
-                                  <option value="Obsoleto" className="bg-[#0F172A]">Obsoleto</option>
-                                  <option value="En blanco" className="bg-[#0F172A]">📄 En blanco (sin especificar)</option>
-                                </select>
-                              </div>
-                            </div>
+                            )}
 
                             {/* Fila Instalado */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                               <div className="space-y-1">
                                 <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">AF Instalado:</label>
                                 <div className="relative">
-                                  <input type="text" name="af_instalado" value={afInstalado} onChange={(e) => handleAfInstaladoChange(e.target.value)} placeholder="10194718" className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 pr-8 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                                  <input 
+                                    type="text" 
+                                    name="af_instalado" 
+                                    value={afInstalado} 
+                                    onChange={(e) => handleAfInstaladoChange(e.target.value)} 
+                                    placeholder="10194718" 
+                                    required={showEquipmentChange}
+                                    pattern="\d{8}"
+                                    title="El AF debe ser un número de exactamente 8 dígitos"
+                                    className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 pr-8 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                  />
                                   {lookingInstalado && <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }} className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-400"><Search size={14} /></motion.div>}
                                 </div>
                               </div>
@@ -425,7 +522,13 @@ export default function RegisterCase() {
                                     <input type="text" value={modeloInstalado} disabled className="w-full bg-white/5 border border-white/5 rounded-lg py-2 px-3 text-sm text-gray-500 cursor-not-allowed opacity-70" />
                                   </>
                                 ) : (
-                                  <select required name="modelo_instalado" value={modeloInstalado} onChange={(e) => setModeloInstalado(e.target.value)} className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                  <select 
+                                    required={showEquipmentChange} 
+                                    name="modelo_instalado" 
+                                    value={modeloInstalado} 
+                                    onChange={(e) => setModeloInstalado(e.target.value)} 
+                                    className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  >
                                     <option value="">-- Selecciona --</option>
                                     <optgroup label="VDSL">
                                       <option value="ZXHN H168N">ZXHN H168N (VDSL)</option>
@@ -447,7 +550,15 @@ export default function RegisterCase() {
                                     <input type="text" value={serieNueva} disabled className="w-full bg-white/5 border border-white/5 rounded-lg py-2 px-3 text-sm text-gray-500 font-mono cursor-not-allowed opacity-70" />
                                   </>
                                 ) : (
-                                  <input type="text" name="serie_nueva" value={serieNueva} onChange={(e) => setSerieNueva(e.target.value.toUpperCase())} placeholder="ZTEGDAD0A2EC" className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                                  <input 
+                                    type="text" 
+                                    name="serie_nueva" 
+                                    value={serieNueva} 
+                                    onChange={(e) => setSerieNueva(e.target.value.toUpperCase())} 
+                                    placeholder="ZTEGDAD0A2EC" 
+                                    required={showEquipmentChange}
+                                    className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                  />
                                 )}
                               </div>
                               <div className="space-y-1">
@@ -463,7 +574,9 @@ export default function RegisterCase() {
                             </div>
 
                             <p className="text-[10px] text-gray-500 italic mt-2">
-                              * La serie antigua se marca como (Funcional), la nueva como (Nuevo).
+                              {equipmentChangeType === 'reemplazo' 
+                                ? "* La serie antigua se marca como (Funcional), la nueva como (Nuevo)."
+                                : "* La serie nueva se marca como (Nuevo)."}
                             </p>
                           </div>
                         </motion.div>
