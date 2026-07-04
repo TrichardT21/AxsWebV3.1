@@ -1,4 +1,4 @@
-import { Search, PlusCircle, Monitor, List, Menu, X, Shield, LogOut, ChevronDown, User, Home } from 'lucide-react';
+import { Search, PlusCircle, Monitor, List, Menu, X, Shield, LogOut, ChevronDown, User, Home, Network, Sliders } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import SearchResultsModal from './SearchResultsModal';
@@ -7,6 +7,8 @@ import { useAuth } from '../context/AuthContext';
 export default function Navbar({ onNavigate, currentView }) {
   const { user, logout, viewingTechnicianId } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isRegistroOpen, setIsRegistroOpen] = useState(false);
+  const [isMobileRegistroOpen, setIsMobileRegistroOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchResults, setSearchResults] = useState({ equipos: [], casos: [] });
@@ -65,8 +67,8 @@ export default function Navbar({ onNavigate, currentView }) {
 
   const navItems = [
     ...(user?.rol === 'tecnico' ? [{ id: 'home', label: 'Inicio', icon: <Home size={17} /> }] : []),
-    { id: 'registrar-caso', label: 'Registrar Caso', icon: <PlusCircle size={17} /> },
-    { id: 'registrar-equipo', label: 'Registrar Equipo', icon: <Monitor size={17} /> },
+    { id: 'configuracion-vdsl', label: 'Config VDSL', icon: <Network size={17} /> },
+    { id: 'evaluacion-parametros', label: 'Eval. Parámetros', icon: <Sliders size={17} /> },
     { id: 'ver-registros', label: 'Ver Registros', icon: <List size={17} /> },
   ];
 
@@ -81,7 +83,7 @@ export default function Navbar({ onNavigate, currentView }) {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0A0F1E]/80 backdrop-blur-md border-b border-white/10 select-none">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12">
         <div className="flex justify-between items-center h-16">
           
           {/* Logo */}
@@ -95,8 +97,81 @@ export default function Navbar({ onNavigate, currentView }) {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-6">
-            {navItems.map((item) => (
+          <div className="hidden xl:flex items-center space-x-6">
+            {/* Items before Registro */}
+            {navItems.filter(item => item.id === 'admin-dashboard' || item.id === 'home').map((item) => (
+              <button
+                key={item.id}
+                onClick={() => onNavigate(item.id)}
+                className={`flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider transition-colors hover:text-blue-400 ${
+                  currentView === item.id ? 'text-blue-500' : 'text-gray-300'
+                }`}
+                id={`nav-item-${item.id}`}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            ))}
+
+            {/* Submenu Registro (Hover) */}
+            <div 
+              className="relative py-2"
+              onMouseEnter={() => setIsRegistroOpen(true)}
+              onMouseLeave={() => setIsRegistroOpen(false)}
+            >
+              <button
+                type="button"
+                onClick={() => setIsRegistroOpen(!isRegistroOpen)}
+                className={`flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider transition-colors hover:text-blue-400 focus:outline-none ${
+                  currentView === 'registrar-caso' || currentView === 'registrar-equipo' ? 'text-blue-500' : 'text-gray-300'
+                }`}
+                id="nav-item-registro"
+              >
+                <PlusCircle size={17} />
+                <span>Registro</span>
+                <ChevronDown size={12} className={`transition-transform duration-200 ${isRegistroOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {isRegistroOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute left-0 mt-2 w-48 bg-[#0F172A]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl py-2 z-50 overflow-hidden text-left"
+                  >
+                    <button
+                      onClick={() => {
+                        onNavigate('registrar-caso');
+                        setIsRegistroOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-white/5 transition-colors flex items-center gap-2 ${
+                        currentView === 'registrar-caso' ? 'text-blue-400 bg-blue-500/5' : 'text-gray-300'
+                      }`}
+                    >
+                      <PlusCircle size={14} />
+                      Registrar Caso
+                    </button>
+                    <button
+                      onClick={() => {
+                        onNavigate('registrar-equipo');
+                        setIsRegistroOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-white/5 transition-colors flex items-center gap-2 ${
+                        currentView === 'registrar-equipo' ? 'text-blue-400 bg-blue-500/5' : 'text-gray-300'
+                      }`}
+                    >
+                      <Monitor size={14} />
+                      Registrar Equipo
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Items after Registro */}
+            {navItems.filter(item => item.id !== 'admin-dashboard' && item.id !== 'home').map((item) => (
               <button
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
@@ -123,7 +198,7 @@ export default function Navbar({ onNavigate, currentView }) {
                 type="text"
                 placeholder="Buscar casos o equipos..."
                 onKeyDown={handleSearchKeyDown}
-                className="bg-white/5 border border-white/10 rounded-full py-1.5 pl-9 pr-4 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all w-40 lg:w-56 text-white placeholder:text-gray-600"
+                className="bg-white/5 border border-white/10 rounded-full py-1.5 pl-9 pr-4 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all w-40 xl:w-56 text-white placeholder:text-gray-600"
                 id="global-search"
               />
             </div>
@@ -183,7 +258,7 @@ export default function Navbar({ onNavigate, currentView }) {
             
             {/* Toggler Menú Móvil */}
             <button 
-              className="md:hidden text-gray-400 hover:text-white focus:outline-none"
+              className="xl:hidden text-gray-400 hover:text-white focus:outline-none"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -199,10 +274,86 @@ export default function Navbar({ onNavigate, currentView }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-[#0A0F1E] border-b border-white/10 overflow-hidden"
+            className="xl:hidden bg-[#0A0F1E] border-b border-white/10 overflow-hidden"
           >
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {navItems.map((item) => (
+              {/* Items before Registro */}
+              {navItems.filter(item => item.id === 'admin-dashboard' || item.id === 'home').map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    onNavigate(item.id);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider ${
+                    currentView === item.id ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-gray-300 hover:bg-white/5'
+                  }`}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </button>
+              ))}
+
+              {/* Registro collapsible submenu */}
+              <div className="w-full">
+                <button
+                  type="button"
+                  onClick={() => setIsMobileRegistroOpen(!isMobileRegistroOpen)}
+                  className={`flex items-center justify-between w-full px-4 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider transition-all ${
+                    currentView === 'registrar-caso' || currentView === 'registrar-equipo'
+                      ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20'
+                      : 'text-gray-300 hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <PlusCircle size={17} />
+                    <span>Registro</span>
+                  </div>
+                  <ChevronDown size={14} className={`transition-transform duration-200 ${isMobileRegistroOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {isMobileRegistroOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden pl-6 pr-2 py-1 space-y-1 bg-white/[0.02] rounded-xl mt-1 border border-white/5"
+                    >
+                      <button
+                        onClick={() => {
+                          onNavigate('registrar-caso');
+                          setIsMobileMenuOpen(false);
+                          setIsMobileRegistroOpen(false);
+                        }}
+                        className={`flex items-center space-x-3 w-full px-4 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider ${
+                          currentView === 'registrar-caso' ? 'bg-blue-600/20 text-blue-400' : 'text-gray-400 hover:bg-white/5'
+                        }`}
+                      >
+                        <PlusCircle size={14} />
+                        <span>Registrar Caso</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          onNavigate('registrar-equipo');
+                          setIsMobileMenuOpen(false);
+                          setIsMobileRegistroOpen(false);
+                        }}
+                        className={`flex items-center space-x-3 w-full px-4 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider ${
+                          currentView === 'registrar-equipo' ? 'bg-blue-600/20 text-blue-400' : 'text-gray-400 hover:bg-white/5'
+                        }`}
+                      >
+                        <Monitor size={14} />
+                        <span>Registrar Equipo</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Items after Registro */}
+              {navItems.filter(item => item.id !== 'admin-dashboard' && item.id !== 'home').map((item) => (
                 <button
                   key={item.id}
                   onClick={() => {

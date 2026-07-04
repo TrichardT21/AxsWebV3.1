@@ -6,6 +6,8 @@ import RegisterEquipment from './components/RegisterEquipment';
 import ViewRecords from './components/ViewRecords';
 import Login from './components/Login';
 import AdminDashboard from './components/AdminDashboard';
+import ConfiguracionVdsl from './components/ConfiguracionVdsl';
+import EvaluacionParametros from './components/EvaluacionParametros';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -62,6 +64,10 @@ function AppContent() {
         return <RegisterCase />;
       case 'registrar-equipo':
         return <RegisterEquipment />;
+      case 'configuracion-vdsl':
+        return <ConfiguracionVdsl onNavigate={(view) => setCurrentView(view)} />;
+      case 'evaluacion-parametros':
+        return <EvaluacionParametros />;
       case 'ver-registros':
         return <ViewRecords />;
       default:

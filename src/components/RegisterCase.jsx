@@ -3,6 +3,11 @@ import { Send, FileText, Calendar, Gauge, Activity, CheckCircle2, AlertTriangle,
 import React, { useState, useRef } from 'react';
 import registerVideo from './assets/register.mp4';
 
+const getLocalDateString = () => {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+};
+
 async function buscarEquipoPorAF(af) {
   if (af.length !== 8) return null;
   try {
@@ -16,7 +21,7 @@ async function buscarEquipoPorAF(af) {
 export default function RegisterCase() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [visitType, setVisitType] = useState('realizada');
-  const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [currentDate, setCurrentDate] = useState(getLocalDateString());
   const [showEquipmentChange, setShowEquipmentChange] = useState(false);
 
   // AF recogido lookup
@@ -93,7 +98,7 @@ export default function RegisterCase() {
         setIncidencia('');
         setShowEquipmentChange(false);
         setVisitType('realizada');
-        setCurrentDate(new Date().toISOString().split('T')[0]);
+        setCurrentDate(getLocalDateString());
       } else {
         alert('Error: ' + (result.error || 'Error desconocido'));
       }
@@ -106,7 +111,7 @@ export default function RegisterCase() {
   };
 
   const setToday = () => {
-    setCurrentDate(new Date().toISOString().split('T')[0]);
+    setCurrentDate(getLocalDateString());
   };
 
   const SectionTitle = ({ title, icon }) => (
@@ -134,6 +139,15 @@ export default function RegisterCase() {
           </div>
           <h2 className="text-3xl font-display font-bold">Formulario de Visita Técnica</h2>
           <p className="text-gray-400 mt-2">Complete el reporte técnico detallado de la intervención.</p>
+          <a
+            href="docs/FORMULARIO DAÑADOS POR TORMENTA.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-white/10 text-blue-400 hover:text-blue-300 font-semibold py-2.5 px-5 rounded-xl text-xs transition-all shadow-[0_4px_12px_rgba(0,0,0,0.2)] active:scale-[0.98]"
+          >
+            <FileText size={14} />
+            FORMULARIO DAÑADOS POR TORMENTA
+          </a>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-10">
@@ -360,6 +374,7 @@ export default function RegisterCase() {
                                     <optgroup label="VDSL">
                                       <option value="ZXHN H168N">ZXHN H168N (VDSL)</option>
                                       <option value="ZXHN H168A">ZXHN H168A (VDSL)</option>
+                                      <option value="VR530V">VR530V (VDSL)</option>
                                     </optgroup>
                                     <optgroup label="GPON">
                                       <option value="ZXHN F660">ZXHN F660 (GPON)</option>
@@ -415,6 +430,7 @@ export default function RegisterCase() {
                                     <optgroup label="VDSL">
                                       <option value="ZXHN H168N">ZXHN H168N (VDSL)</option>
                                       <option value="ZXHN H168A">ZXHN H168A (VDSL)</option>
+                                      <option value="VR530V">VR530V (VDSL)</option>
                                     </optgroup>
                                     <optgroup label="GPON">
                                       <option value="ZXHN F660">ZXHN F660 (GPON)</option>

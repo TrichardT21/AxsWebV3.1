@@ -137,7 +137,7 @@ try {
             $observacionEquipo = "Equipo recogido del caso " . $contrato;
             $insert = $conn->prepare("INSERT INTO equipos (af, modelo, serie, estado, ubicacion, contrato, fecha_registro, observaciones, usuario_id) 
                 VALUES (?, ?, ?, ?, 'Mi gabeta (Bodega)', NULL, CURDATE(), ?, ?)");
-            $insert->bind_param("ssssssi", $af_recogido, $modelo_recogido, $serie_antigua, $estado_recogido, $observacionEquipo, $usuario_actual['id']);
+            $insert->bind_param("sssssi", $af_recogido, $modelo_recogido, $serie_antigua, $estado_recogido, $observacionEquipo, $usuario_actual['id']);
             if ($insert->execute()) {
                 $mensajes[] = "✅ Nuevo equipo recogido AF: $af_recogido registrado en BODEGA (modelo: $modelo_recogido, serie: $serie_antigua, estado: $estado_recogido)";
             }
@@ -163,7 +163,7 @@ try {
                 fecha_registro = CURDATE(),
                 usuario_id = ?
                 WHERE af = ?");
-            $update->bind_param("sssis", $estado_instalado, $contrato, $usuario_actual['id'], $af_instalado);
+            $update->bind_param("ssis", $estado_instalado, $contrato, $usuario_actual['id'], $af_instalado);
             if ($update->execute()) {
                 $mensajes[] = "✅ Equipo instalado AF: $af_instalado actualizado (ubicación: CONTRATO $contrato, estado: $estado_instalado)";
             }
@@ -173,7 +173,7 @@ try {
             $observacionEquipoInstalado = "Equipo instalado en el caso " . $contrato;
             $insert = $conn->prepare("INSERT INTO equipos (af, modelo, serie, estado, ubicacion, contrato, fecha_registro, observaciones, usuario_id) 
                 VALUES (?, ?, ?, ?, 'Contrato', ?, CURDATE(), ?, ?)");
-            $insert->bind_param("sssssssi", $af_instalado, $modelo_instalado, $serie_nueva, $estado_instalado, $contrato, $observacionEquipoInstalado, $usuario_actual['id']);
+            $insert->bind_param("ssssssi", $af_instalado, $modelo_instalado, $serie_nueva, $estado_instalado, $contrato, $observacionEquipoInstalado, $usuario_actual['id']);
             if ($insert->execute()) {
                 $mensajes[] = "✅ Nuevo equipo instalado AF: $af_instalado registrado en CONTRATO $contrato (modelo: $modelo_instalado, serie: $serie_nueva, estado: $estado_instalado)";
             }
@@ -192,7 +192,7 @@ try {
         'mensajes' => $mensajes
     ]);
     
-} catch (Exception $e) {
+} catch (Throwable $e) {
     $conn->rollback();
     echo json_encode(['error' => 'Error: ' . $e->getMessage()]);
 }

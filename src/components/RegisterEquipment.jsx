@@ -26,9 +26,14 @@ const getUbicacionValue = (dbVal, hasContrato) => {
   return dbVal; // fallback
 };
 
+const getLocalDateString = () => {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+};
+
 export default function RegisterEquipment() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [currentDate, setCurrentDate] = useState(getLocalDateString());
   const [ubicacion, setUbicacion] = useState('');
 
   // AF lookup state
@@ -175,13 +180,13 @@ export default function RegisterEquipment() {
     setUbicacion('');
     setContrato('');
     setObservaciones('');
-    setCurrentDate(new Date().toISOString().split('T')[0]);
+    setCurrentDate(getLocalDateString());
     setEquipoEncontrado(null);
     setAfLookupDone(false);
   };
 
   const setToday = () => {
-    setCurrentDate(new Date().toISOString().split('T')[0]);
+    setCurrentDate(getLocalDateString());
   };
 
   const isExistingEquipo = equipoEncontrado !== null;
@@ -316,6 +321,7 @@ export default function RegisterEquipment() {
                     <optgroup label="VDSL">
                       <option value="ZXHN H168N" className="bg-[#0F172A]">ZXHN H168N (VDSL)</option>
                       <option value="ZXHN H168A" className="bg-[#0F172A]">ZXHN H168A (VDSL)</option>
+                      <option value="VR530V" className="bg-[#0F172A]">VR530V (VDSL)</option>
                     </optgroup>
                     <optgroup label="GPON">
                       <option value="ZXHN F660" className="bg-[#0F172A]">ZXHN F660 (GPON)</option>

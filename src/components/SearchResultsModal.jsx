@@ -77,34 +77,51 @@ export default function SearchResultsModal({ isOpen, onClose, query = '', result
         ? `${(caso.velocidad_wifi5_down || '0,00').toString().replace('.', ',')}/${(caso.velocidad_wifi5_up || '0,00').toString().replace('.', ',')} Mbps` 
         : null;
 
+    const estadoUpper = (caso.estado || '').toUpperCase();
+    const isSuspended = (!caso.diagnostico && !caso.solucion) || 
+                        estadoUpper.includes('SUSPENDIDO') || 
+                        estadoUpper.includes('REPROGRAMADO') || 
+                        estadoUpper.includes('CANCELADO') || 
+                        estadoUpper.includes('AUSENTE') || 
+                        estadoUpper.includes('NO CONTESTA');
+
     let textoPlano = '';
 
     if (viewMode === 'simple') {
-        textoPlano = `*CONTRATO:* ${caso.contrato}\n`;
-        textoPlano += `*FECHA:* ${fechaFormateada}\n`;
-        textoPlano += `*HORA:* ${horaTexto}\n\n`;
-        textoPlano += `*${caso.incidencia || 'INCIDENCIA'}:*\n\n`;
-        textoPlano += `*DIAGNÓSTICO:* ${caso.diagnostico || 'No especificado'}\n\n`;
-        textoPlano += `*SOLUCIÓN:* ${caso.solucion || 'No especificada'}\n\n`;
-        
-        if (caso.af_recogido) {
-            textoPlano += `*AF Recogido:* ${caso.af_recogido}\n`;
-            textoPlano += `${caso.serie_antigua} (${caso.estado_recogido || 'Funcional'})\n`;
-            textoPlano += `*AF Instalado:* ${caso.af_instalado}\n`;
-            textoPlano += `${caso.serie_nueva} (${caso.estado_instalado || 'Nuevo'})\n\n`;
+        if (isSuspended) {
+            textoPlano = `*CONTRATO:* ${caso.contrato}\n`;
+            textoPlano += `*FECHA:* ${fechaFormateada}\n`;
+            textoPlano += `*HORA:* ${horaTexto}\n\n`;
+            textoPlano += `*${caso.incidencia || 'INCIDENCIA'}:*\n\n`;
+            textoPlano += `*DESCRIPCION:* ${caso.observaciones || 'No especificada'}\n\n`;
+            textoPlano += `*${caso.estado}*`;
+        } else {
+            textoPlano = `*CONTRATO:* ${caso.contrato}\n`;
+            textoPlano += `*FECHA:* ${fechaFormateada}\n`;
+            textoPlano += `*HORA:* ${horaTexto}\n\n`;
+            textoPlano += `*${caso.incidencia || 'INCIDENCIA'}:*\n\n`;
+            textoPlano += `*DIAGNÓSTICO:* ${caso.diagnostico || 'No especificado'}\n\n`;
+            textoPlano += `*SOLUCIÓN:* ${caso.solucion || 'No especificada'}\n\n`;
+            
+            if (caso.af_recogido) {
+                textoPlano += `*AF Recogido:* ${caso.af_recogido}\n`;
+                textoPlano += `${caso.serie_antigua} (${caso.estado_recogido || 'Funcional'})\n`;
+                textoPlano += `*AF Instalado:* ${caso.af_instalado}\n`;
+                textoPlano += `${caso.serie_nueva} (${caso.estado_instalado || 'Nuevo'})\n\n`;
+            }
+            
+            textoPlano += `*Vel. Ethernet (D/U):* ${ethSpeed}\n`;
+            textoPlano += `*Vel. Wifi 2.4G (D/U):* ${wifi24Speed}\n`;
+            if (wifi5Speed) {
+                textoPlano += `*Vel. Wifi 5G (D/U):* ${wifi5Speed}\n`;
+            }
+            textoPlano += `\n`;
+            
+            if (caso.observaciones) {
+                textoPlano += `*OBSERVACIONES:* \n${caso.observaciones}\n\n`;
+            }
+            textoPlano += `*${caso.estado}*`;
         }
-        
-        textoPlano += `*Vel. Ethernet (D/U):* ${ethSpeed}\n`;
-        textoPlano += `*Vel. Wifi 2.4G (D/U):* ${wifi24Speed}\n`;
-        if (wifi5Speed) {
-            textoPlano += `*Vel. Wifi 5G (D/U):* ${wifi5Speed}\n`;
-        }
-        textoPlano += `\n`;
-        
-        if (caso.observaciones) {
-            textoPlano += `*OBSERVACIONES:* \n${caso.observaciones}\n\n`;
-        }
-        textoPlano += `*${caso.estado}*`;
     } else {
         textoPlano = `CONTRATO: ${caso.contrato}\n`;
         textoPlano += `FECHA: ${fechaFormateada}\n`;
@@ -153,38 +170,49 @@ export default function SearchResultsModal({ isOpen, onClose, query = '', result
         
         <div className="p-6 text-gray-200 text-[15px] space-y-1 font-sans leading-[1.6] whitespace-pre-wrap flex-1 overflow-y-auto">
           {viewMode === 'simple' ? (
-            <>
-              <div><span className="font-bold text-white">*CONTRATO:*</span> {caso.contrato}</div>
-              <div><span className="font-bold text-white">*FECHA:*</span> {fechaFormateada}</div>
-              <div><span className="font-bold text-white">*HORA:*</span> {horaTexto}</div>
-              <div className="pt-2"><span className="font-bold text-white">*{caso.incidencia || 'INCIDENCIA'}:*</span></div>
-              <div className="pt-2"><span className="font-bold text-white">*DIAGNÓSTICO:*</span> {caso.diagnostico || 'No especificado'}</div>
-              <div className="pt-2"><span className="font-bold text-white">*SOLUCIÓN:*</span> {caso.solucion || 'No especificada'}</div>
-              
-              {caso.af_recogido && (
+            isSuspended ? (
+              <>
+                <div><span className="font-bold text-white">*CONTRATO:*</span> {caso.contrato}</div>
+                <div><span className="font-bold text-white">*FECHA:*</span> {fechaFormateada}</div>
+                <div><span className="font-bold text-white">*HORA:*</span> {horaTexto}</div>
+                <div className="pt-2"><span className="font-bold text-white">*{caso.incidencia || 'INCIDENCIA'}:*</span></div>
+                <div className="pt-2"><span className="font-bold text-white">*DESCRIPCION:*</span> {caso.observaciones || 'No especificada'}</div>
+                <div className="pt-4 text-[#ffc107] font-bold text-lg">*{caso.estado}*</div>
+              </>
+            ) : (
+              <>
+                <div><span className="font-bold text-white">*CONTRATO:*</span> {caso.contrato}</div>
+                <div><span className="font-bold text-white">*FECHA:*</span> {fechaFormateada}</div>
+                <div><span className="font-bold text-white">*HORA:*</span> {horaTexto}</div>
+                <div className="pt-2"><span className="font-bold text-white">*{caso.incidencia || 'INCIDENCIA'}:*</span></div>
+                <div className="pt-2"><span className="font-bold text-white">*DIAGNÓSTICO:*</span> {caso.diagnostico || 'No especificado'}</div>
+                <div className="pt-2"><span className="font-bold text-white">*SOLUCIÓN:*</span> {caso.solucion || 'No especificada'}</div>
+                
+                {caso.af_recogido && (
+                  <div className="pt-2">
+                    <div><span className="font-bold text-white">*AF Recogido:*</span> {caso.af_recogido}</div>
+                    <div>{caso.serie_antigua} ({caso.estado_recogido || 'Funcional'})</div>
+                    <div><span className="font-bold text-white">*AF Instalado:*</span> {caso.af_instalado}</div>
+                    <div>{caso.serie_nueva} ({caso.estado_instalado || 'Nuevo'})</div>
+                  </div>
+                )}
+                
                 <div className="pt-2">
-                  <div><span className="font-bold text-white">*AF Recogido:*</span> {caso.af_recogido}</div>
-                  <div>{caso.serie_antigua} ({caso.estado_recogido || 'Funcional'})</div>
-                  <div><span className="font-bold text-white">*AF Instalado:*</span> {caso.af_instalado}</div>
-                  <div>{caso.serie_nueva} ({caso.estado_instalado || 'Nuevo'})</div>
+                  <div><span className="font-bold text-white">*Vel. Ethernet (D/U):*</span> {ethSpeed}</div>
+                  <div><span className="font-bold text-white">*Vel. Wifi 2.4G (D/U):*</span> {wifi24Speed}</div>
+                  {wifi5Speed && <div><span className="font-bold text-white">*Vel. Wifi 5G (D/U):*</span> {wifi5Speed}</div>}
                 </div>
-              )}
-              
-              <div className="pt-2">
-                <div><span className="font-bold text-white">*Vel. Ethernet (D/U):*</span> {ethSpeed}</div>
-                <div><span className="font-bold text-white">*Vel. Wifi 2.4G (D/U):*</span> {wifi24Speed}</div>
-                {wifi5Speed && <div><span className="font-bold text-white">*Vel. Wifi 5G (D/U):*</span> {wifi5Speed}</div>}
-              </div>
 
-              {caso.observaciones && (
-                <div className="pt-2">
-                  <div><span className="font-bold text-white">*OBSERVACIONES:*</span></div>
-                  <div>{caso.observaciones}</div>
-                </div>
-              )}
-              
-              <div className="pt-4 text-[#28a745] font-bold text-lg">*{caso.estado}*</div>
-            </>
+                {caso.observaciones && (
+                  <div className="pt-2">
+                    <div><span className="font-bold text-white">*OBSERVACIONES:*</span></div>
+                    <div>{caso.observaciones}</div>
+                  </div>
+                )}
+                
+                <div className="pt-4 text-[#28a745] font-bold text-lg">*{caso.estado}*</div>
+              </>
+            )
           ) : (
             <>
               <div>CONTRATO: {caso.contrato}</div>
@@ -199,7 +227,7 @@ export default function SearchResultsModal({ isOpen, onClose, query = '', result
               <div>{caso.solucion || 'No especificada'}</div>
               <div>Vel. Ethernet (D/U): {ethSpeed}</div>
               {caso.observaciones && <div>{caso.observaciones}</div>}
-              <div className="pt-4 text-[#28a745] font-bold text-lg">{caso.estado}</div>
+              <div className={`pt-4 font-bold text-lg ${isSuspended ? 'text-[#ffc107]' : 'text-[#28a745]'}`}>{caso.estado}</div>
 
               <div className="pt-2">REVISIÓN WLAN:</div>
               <div>Vel. Wifi 2.4G (D/U): {wifi24Speed}</div>
