@@ -121,8 +121,8 @@ const ontEquipments = [
     modelo: "F670L.V9",
     fecha: "JUN 2024",
     publico: "SI",
-    series: ["ZTEGD6DD", "ZTEGD38D"],
-    serieOriginal: "ZTEGD6DD/ZTEGD38D",
+    series: ["ZTEGD6DD", "ZTEGD6DE", "ZTEGD38D"],
+    serieOriginal: "ZTEGD6DD/ZTEGD6DE/ZTEGD38D",
     interfaz: "HAYEC",
     credencial: "Web@0063",
     observaciones: "MUY BUENA COBERTURA, WIFI 5, AC1200"
@@ -199,7 +199,8 @@ export default function EvaluacionParametros() {
       return;
     }
 
-    const matched = ontEquipments.find(ont => {
+    // 1. Intento de coincidencia exacta por prefijo
+    let matched = ontEquipments.find(ont => {
       return ont.series.some(pref => {
         const normPref = pref.trim().toUpperCase().replace(/O/g, '0');
         const normInput = cleanInput.replace(/O/g, '0');
@@ -207,8 +208,24 @@ export default function EvaluacionParametros() {
       });
     });
 
+    let proximity = false;
+
+    // 2. Si no hay coincidencia exacta, intentamos por aproximidad (primeros 7 caracteres)
+    if (!matched && cleanInput.length >= 7) {
+      matched = ontEquipments.find(ont => {
+        return ont.series.some(pref => {
+          const normPref = pref.trim().toUpperCase().replace(/O/g, '0');
+          const normInput = cleanInput.replace(/O/g, '0');
+          return normInput.substring(0, 7) === normPref.substring(0, 7);
+        });
+      });
+      if (matched) {
+        proximity = true;
+      }
+    }
+
     if (matched) {
-      setSelectedOnt(matched);
+      setSelectedOnt({ ...matched, isProximityMatch: proximity });
       setIsOntModalOpen(true);
       setOntErrorMessage('');
     } else {
@@ -688,6 +705,11 @@ export default function EvaluacionParametros() {
                   <div className="space-y-1">
                     <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Prefijo de Serie:</span>
                     <p className="font-mono text-sm text-blue-400 font-semibold">{selectedOnt.serieOriginal}</p>
+                    {selectedOnt.isProximityMatch && (
+                      <span className="text-[11px] text-amber-400 flex items-center gap-1 mt-1 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded">
+                        <AlertTriangle size={12} className="shrink-0" /> Coincidencia por aproximidad (está en el rango de esta tanda)
+                      </span>
+                    )}
                   </div>
 
                   <div className="space-y-1">

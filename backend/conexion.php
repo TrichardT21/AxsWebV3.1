@@ -1,9 +1,9 @@
 <?php
 // Configuración
-$host = 'localhost';
-$user = 'root';
-$password = 'Mamacita.com921';
-$database = 'axs_sistema';
+$host = getenv('DB_HOST') ?: 'localhost';
+$user = getenv('DB_USER') ?: 'root';
+$password = getenv('DB_PASSWORD') ?: 'Mamacita.com921';
+$database = getenv('DB_NAME') ?: 'axs_sistema';
 
 // 1. Conectar sin seleccionar base de datos
 $conn = new mysqli($host, $user, $password);

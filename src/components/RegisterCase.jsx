@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Send, FileText, Calendar, Gauge, Activity, CheckCircle2, AlertTriangle, ShieldCheck, Search } from 'lucide-react';
 import React, { useState, useRef } from 'react';
 import registerVideo from './assets/register.mp4';
+import { API_BASE } from '../config/api';
 
 const getLocalDateString = () => {
   const d = new Date();
@@ -11,7 +12,7 @@ const getLocalDateString = () => {
 async function buscarEquipoPorAF(af) {
   if (af.length !== 8) return null;
   try {
-    const res = await fetch(`backend/buscar_por_af.php?af=${encodeURIComponent(af)}`, { credentials: 'include' });
+    const res = await fetch(`${API_BASE}/buscar_por_af.php?af=${encodeURIComponent(af)}`, { credentials: 'include' });
     const data = await res.json();
     if (data.existe && data.equipo) return data.equipo;
   } catch { /* silent */ }
@@ -41,18 +42,29 @@ export default function RegisterCase() {
   const [instaladoFound, setInstaladoFound] = useState(false);
   const timerInstalado = useRef(null);
 
+  const [estadoRecogido, setEstadoRecogido] = useState('');
+  const [estadoInstalado, setEstadoInstalado] = useState('');
+
   const [incidencia, setIncidencia] = useState('');
 
   const handleAfRecogidoChange = (val) => {
     const v = val.replace(/\D/g, '').slice(0, 8);
-    setAfRecogido(v); setModeloRecogido(''); setSerieAntigua(''); setRecogidoFound(false);
+    setAfRecogido(v); setModeloRecogido(''); setSerieAntigua(''); setRecogidoFound(false); setEstadoRecogido('');
     if (timerRecogido.current) clearTimeout(timerRecogido.current);
     if (v.length === 8) {
       timerRecogido.current = setTimeout(async () => {
         setLookingRecogido(true);
         const eq = await buscarEquipoPorAF(v);
-        if (eq) { setModeloRecogido(eq.modelo || ''); setSerieAntigua(eq.serie || ''); setRecogidoFound(true); }
-        else { setRecogidoFound(false); }
+        if (eq) { 
+          setModeloRecogido(eq.modelo || ''); 
+          setSerieAntigua(eq.serie || ''); 
+          setRecogidoFound(true); 
+          if (eq.estado) setEstadoRecogido(eq.estado);
+        }
+        else { 
+          setRecogidoFound(false); 
+          setEstadoRecogido('');
+        }
         setLookingRecogido(false);
       }, 400);
     }
@@ -60,14 +72,22 @@ export default function RegisterCase() {
 
   const handleAfInstaladoChange = (val) => {
     const v = val.replace(/\D/g, '').slice(0, 8);
-    setAfInstalado(v); setModeloInstalado(''); setSerieNueva(''); setInstaladoFound(false);
+    setAfInstalado(v); setModeloInstalado(''); setSerieNueva(''); setInstaladoFound(false); setEstadoInstalado('');
     if (timerInstalado.current) clearTimeout(timerInstalado.current);
     if (v.length === 8) {
       timerInstalado.current = setTimeout(async () => {
         setLookingInstalado(true);
         const eq = await buscarEquipoPorAF(v);
-        if (eq) { setModeloInstalado(eq.modelo || ''); setSerieNueva(eq.serie || ''); setInstaladoFound(true); }
-        else { setInstaladoFound(false); }
+        if (eq) { 
+          setModeloInstalado(eq.modelo || ''); 
+          setSerieNueva(eq.serie || ''); 
+          setInstaladoFound(true); 
+          if (eq.estado) setEstadoInstalado(eq.estado);
+        }
+        else { 
+          setInstaladoFound(false); 
+          setEstadoInstalado('');
+        }
         setLookingInstalado(false);
       }, 400);
     }
@@ -82,7 +102,7 @@ export default function RegisterCase() {
       const formData = new FormData(form);
       const data = Object.fromEntries(formData.entries());
       
-      const response = await fetch('backend/guardar_caso.php', {
+      const response = await fetch(`${API_BASE}/guardar_caso.php`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -109,6 +129,8 @@ export default function RegisterCase() {
         setModeloInstalado('');
         setSerieNueva('');
         setInstaladoFound(false);
+        setEstadoRecogido('');
+        setEstadoInstalado('');
       } else {
         alert('Error: ' + (result.error || 'Error desconocido'));
       }
@@ -471,7 +493,13 @@ export default function RegisterCase() {
                                 </div>
                                 <div className="space-y-1">
                                   <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Estado Equipo Recogido:</label>
-                                  <select name="estado_recogido" className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                  <select 
+                                    required={equipmentChangeType === 'reemplazo'}
+                                    name="estado_recogido" 
+                                    value={estadoRecogido}
+                                    onChange={(e) => setEstadoRecogido(e.target.value)}
+                                    className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  >
                                     <option value="">-- Selecciona estado --</option>
                                     <option value="Funcional" className="bg-[#0F172A]">✅ Funcional</option>
                                     <option value="Dañado" className="bg-[#0F172A]">❌ Dañado</option>
@@ -563,7 +591,13 @@ export default function RegisterCase() {
                               </div>
                               <div className="space-y-1">
                                 <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Estado Equipo Instalado:</label>
-                                <select name="estado_instalado" className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <select 
+                                  required={showEquipmentChange}
+                                  name="estado_instalado" 
+                                  value={estadoInstalado}
+                                  onChange={(e) => setEstadoInstalado(e.target.value)}
+                                  className="w-full bg-[#0A0F1E] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                >
                                   <option value="">-- Selecciona estado --</option>
                                   <option value="Nuevo" className="bg-[#0F172A]">🆕 Nuevo</option>
                                   <option value="Funcional" className="bg-[#0F172A]">✅ Funcional</option>

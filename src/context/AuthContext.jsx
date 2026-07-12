@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { API_BASE } from '../config/api';
 
 const AuthContext = createContext(undefined);
 
@@ -22,7 +23,7 @@ export const AuthProvider = ({ children }) => {
 
   const checkSession = async () => {
     try {
-      const res = await fetch('backend/verificar_sesion.php', {
+      const res = await fetch(`${API_BASE}/verificar_sesion.php`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -51,7 +52,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (usuario, password) => {
     try {
-      const res = await fetch('backend/login.php', {
+      const res = await fetch(`${API_BASE}/login.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usuario, password }),
@@ -71,7 +72,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await fetch('backend/logout.php', {
+      await fetch(`${API_BASE}/logout.php`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -85,7 +86,7 @@ export const AuthProvider = ({ children }) => {
 
   const registerRequest = async (nombre, usuario, password) => {
     try {
-      const res = await fetch('backend/registro_solicitud.php', {
+      const res = await fetch(`${API_BASE}/registro_solicitud.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre, usuario, password }),

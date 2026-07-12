@@ -35,46 +35,89 @@ export default function SearchResultsModal({ isOpen, onClose, query = '', result
   };
 
   const restar30Minutos = (hora) => {
-    if (!hora || hora === '--:--') return '--:--';
-    const parts = hora.split(':');
-    const horas = parseInt(parts[0], 10);
-    const minutos = parseInt(parts[1], 10);
-    let totalMinutos = horas * 60 + minutos - 30;
-    if (totalMinutos < 0) totalMinutos += 24 * 60;
-    const nuevasHoras = Math.floor(totalMinutos / 60);
-    const nuevosMinutos = totalMinutos % 60;
-    return `${nuevasHoras.toString().padStart(2, '0')}:${nuevosMinutos.toString().padStart(2, '0')}`;
+    try {
+      if (!hora || typeof hora !== 'string' || hora === '--:--' || !hora.includes(':')) return '--:--';
+      const parts = hora.split(':');
+      if (parts.length < 2) return '--:--';
+      const horas = parseInt(parts[0], 10);
+      const minutos = parseInt(parts[1], 10);
+      if (isNaN(horas) || isNaN(minutos)) return '--:--';
+      let totalMinutos = horas * 60 + minutos - 30;
+      if (totalMinutos < 0) totalMinutos += 24 * 60;
+      const nuevasHoras = Math.floor(totalMinutos / 60);
+      const nuevosMinutos = totalMinutos % 60;
+      
+      const pad = (num) => {
+        const s = String(num);
+        return s.length < 2 ? '0' + s : s;
+      };
+      
+      return `${pad(nuevasHoras)}:${pad(nuevosMinutos)}`;
+    } catch (e) {
+      console.error("Error en restar30Minutos:", e);
+      return '--:--';
+    }
   };
 
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text).then(() => {
-      alert('Caso copiado al portapapeles');
-    }).catch(err => {
-      console.error('Error al copiar: ', err);
-    });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Caso copiado al portapapeles');
+      }).catch(err => {
+        console.error('Error al copiar: ', err);
+        fallbackCopyToClipboard(text);
+      });
+    } else {
+      fallbackCopyToClipboard(text);
+    }
+  };
+
+  const fallbackCopyToClipboard = (text) => {
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      if (successful) {
+        alert('Caso copiado al portapapeles');
+      } else {
+        alert('No se pudo copiar el caso.');
+      }
+    } catch (err) {
+      console.error('Fallback copy error: ', err);
+    }
   };
 
   const renderCaseDetails = () => {
     if (!selectedCaso) return null;
     const caso = selectedCaso;
 
-    let fechaFormateada = caso.fecha;
-    if (fechaFormateada && fechaFormateada.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    let fechaFormateada = caso.fecha || '';
+    if (fechaFormateada && typeof fechaFormateada === 'string' && fechaFormateada.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const partes = fechaFormateada.split('-');
         fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
-    const horaInicioSinSegundos = caso.hora_inicio ? caso.hora_inicio.substring(0,5) : '--:--';
-    const horaFinSinSegundos = caso.hora_fin ? caso.hora_fin.substring(0,5) : '';
+    const horaInicioSinSegundos = caso.hora_inicio && typeof caso.hora_inicio === 'string' ? caso.hora_inicio.substring(0,5) : '--:--';
+    const horaFinSinSegundos = caso.hora_fin && typeof caso.hora_fin === 'string' ? caso.hora_fin.substring(0,5) : '';
     const horaTexto = `${horaInicioSinSegundos}${horaFinSinSegundos ? ` - ${horaFinSinSegundos}` : ''}`;
     const horaLlamada = restar30Minutos(horaInicioSinSegundos);
 
-    const ethSpeed = `${(caso.velocidad_eth_down || 'N/A').toString().replace('.', ',')}/${(caso.velocidad_eth_up || 'N/A').toString().replace('.', ',')} Mbps`;
-    const wifi24Speed = `${(caso.velocidad_wifi24_down || 'N/A').toString().replace('.', ',')}/${(caso.velocidad_wifi24_up || 'N/A').toString().replace('.', ',')} Mbps`;
+    const safeFormatSpeed = (val) => {
+      if (val === undefined || val === null || val === '') return 'N/A';
+      return val.toString().replace('.', ',');
+    };
+
+    const ethSpeed = `${safeFormatSpeed(caso.velocidad_eth_down)}/${safeFormatSpeed(caso.velocidad_eth_up)} Mbps`;
+    const wifi24Speed = `${safeFormatSpeed(caso.velocidad_wifi24_down)}/${safeFormatSpeed(caso.velocidad_wifi24_up)} Mbps`;
     const wifi5DownNum = parseFloat(caso.velocidad_wifi5_down || '0');
     const wifi5UpNum = parseFloat(caso.velocidad_wifi5_up || '0');
     const wifi5Speed = (wifi5DownNum > 0 || wifi5UpNum > 0) 
-        ? `${(caso.velocidad_wifi5_down || '0,00').toString().replace('.', ',')}/${(caso.velocidad_wifi5_up || '0,00').toString().replace('.', ',')} Mbps` 
+        ? `${safeFormatSpeed(caso.velocidad_wifi5_down)}/${safeFormatSpeed(caso.velocidad_wifi5_up)} Mbps` 
         : null;
 
     const estadoUpper = (caso.estado || '').toUpperCase();

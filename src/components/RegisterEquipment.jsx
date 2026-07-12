@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Monitor, Save, Trash2, Calendar, ClipboardList, Search, CheckCircle2, AlertCircle, Lock } from 'lucide-react';
 import React, { useState, useRef } from 'react';
 import registerVideo from './assets/register.mp4';
+import { API_BASE } from '../config/api';
 
 const getEstadoValue = (dbVal) => {
   if (!dbVal) return 'Nuevo';
@@ -53,7 +54,7 @@ export default function RegisterEquipment() {
 
   const fetchLatestEquipment = async () => {
     try {
-      const res = await fetch('backend/obtener_equipos.php', { credentials: 'include' });
+      const res = await fetch(`${API_BASE}/obtener_equipos.php`, { credentials: 'include' });
       const data = await res.json();
       if (Array.isArray(data)) {
         setLatestEquipment(data.slice(0, 9));
@@ -71,7 +72,7 @@ export default function RegisterEquipment() {
     setAfLookupDone(false);
     setEquipoEncontrado(null);
     try {
-      const res = await fetch(`backend/buscar_por_af.php?af=${encodeURIComponent(af)}`, { credentials: 'include' });
+      const res = await fetch(`${API_BASE}/buscar_por_af.php?af=${encodeURIComponent(af)}`, { credentials: 'include' });
       const data = await res.json();
       if (data.existe && data.equipo) {
         const eq = data.equipo;
@@ -143,7 +144,7 @@ export default function RegisterEquipment() {
 
       // If AF already exists → update; otherwise → insert
       const isUpdate = equipoEncontrado !== null;
-      const endpoint = isUpdate ? 'backend/actualizar_equipo.php' : 'backend/guardar_equipo.php';
+      const endpoint = isUpdate ? `${API_BASE}/actualizar_equipo.php` : `${API_BASE}/guardar_equipo.php`;
       const payload = isUpdate
         ? { id: equipoEncontrado.id, estado, ubicacion, contrato: data.contrato || '', fecha_registro: currentDate, observaciones }
         : data;

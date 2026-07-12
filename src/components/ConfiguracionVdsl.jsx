@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import registerVideo from './assets/register.mp4';
+import { API_BASE } from '../config/api';
 
 const getLocalDateString = () => {
   const d = new Date();
@@ -137,7 +138,7 @@ export default function ConfiguracionVdsl({ onNavigate }) {
 
   const fetchRecentConfigs = async () => {
     try {
-      const response = await fetch('backend/obtener_vdsl.php', { credentials: 'include' });
+      const response = await fetch(`${API_BASE}/obtener_vdsl.php`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data)) {
@@ -223,7 +224,7 @@ export default function ConfiguracionVdsl({ onNavigate }) {
     };
 
     try {
-      const response = await fetch('backend/guardar_vdsl.php', {
+      const response = await fetch(`${API_BASE}/guardar_vdsl.php`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

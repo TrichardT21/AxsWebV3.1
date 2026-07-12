@@ -67,9 +67,19 @@ if ($dbUser['estado'] === 'inactivo') {
 
 // Iniciar sesión
 if (session_status() === PHP_SESSION_NONE) {
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
 }
 
+session_regenerate_id(true);
 $_SESSION['usuario_id'] = $dbUser['id'];
 $_SESSION['rol'] = $dbUser['rol'];
 

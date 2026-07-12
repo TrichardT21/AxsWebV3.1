@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import SearchResultsModal from './SearchResultsModal';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../config/api';
 
 export default function Navbar({ onNavigate, currentView }) {
   const { user, logout, viewingTechnicianId } = useAuth();
@@ -46,8 +47,8 @@ export default function Navbar({ onNavigate, currentView }) {
         }
 
         const [equiposRes, casosRes] = await Promise.all([
-          fetch(`backend/buscar.php?${queryParamsEquipos.toString()}`, { credentials: 'include' }),
-          fetch(`backend/buscar.php?${queryParamsCasos.toString()}`, { credentials: 'include' })
+          fetch(`${API_BASE}/buscar.php?${queryParamsEquipos.toString()}`, { credentials: 'include' }),
+          fetch(`${API_BASE}/buscar.php?${queryParamsCasos.toString()}`, { credentials: 'include' })
         ]);
         
         const equipos = await equiposRes.json();
@@ -91,7 +92,7 @@ export default function Navbar({ onNavigate, currentView }) {
             className="flex-shrink-0 flex items-center cursor-pointer"
             onClick={() => onNavigate(user?.rol === 'admin' ? 'admin-dashboard' : 'home')}
           >
-            <span className="text-2xl font-display font-bold tracking-tighter text-white">
+            <span className="text-2xl font-display font-bold tracking-tighter text-white notranslate" translate="no">
               AXS<span className="text-blue-500">.</span>
             </span>
           </div>

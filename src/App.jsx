@@ -41,7 +41,7 @@ function AppContent() {
     return (
       <div className="min-h-screen bg-[#090D1A] flex flex-col items-center justify-center gap-4 text-white">
         <div className="w-10 h-10 border-2 border-white/10 border-t-blue-500 rounded-full animate-spin"></div>
-        <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold animate-pulse font-sans">
+        <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold animate-pulse font-sans notranslate" translate="no">
           Validando Sesión AXS...
         </p>
       </div>
@@ -98,7 +98,7 @@ function AppContent() {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex flex-col items-center md:items-start">
-              <span className="text-xl font-display font-bold tracking-tighter text-white mb-2">
+              <span className="text-xl font-display font-bold tracking-tighter text-white mb-2 notranslate" translate="no">
                 AXS<span className="text-blue-500">.</span>
               </span>
               <p className="text-gray-500 text-xs uppercase tracking-widest font-medium">

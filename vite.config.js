@@ -18,7 +18,22 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      port: 3000,
+      strictPort: false, // Si 3000 está ocupado, usa el siguiente disponible
       hmr: process.env.DISABLE_HMR !== 'true',
+      proxy: {
+        // Redirige /AxsReact/backend/* → IIS (localhost:80) que ejecuta PHP + MySQL
+        '/AxsReact/backend': {
+          target: 'http://localhost:80',
+          changeOrigin: true,
+          secure: false,
+          configure: (proxy) => {
+            proxy.on('error', (err) => {
+              console.error('[Proxy] Error al conectar con IIS:', err.message);
+            });
+          },
+        },
+      },
     },
   }
 })

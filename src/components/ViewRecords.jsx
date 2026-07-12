@@ -3,6 +3,7 @@ import { Filter, Download, Monitor, ClipboardList, Eye, ShieldAlert, ArrowLeft, 
 import { useState, useEffect } from 'react';
 import SearchResultsModal from './SearchResultsModal';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../config/api';
 
 export default function ViewRecords() {
   const { user, viewingTechnicianId, viewingTechnicianName, stopViewingAsTechnician } = useAuth();
@@ -73,8 +74,8 @@ export default function ViewRecords() {
 
       const qs = queryParams.toString() ? `?${queryParams.toString()}` : '';
       const [casosRes, equiposRes] = await Promise.all([
-        fetch(`backend/obtener_casos.php${qs}`, { credentials: 'include' }),
-        fetch(`backend/obtener_equipos.php${qs}`, { credentials: 'include' })
+        fetch(`${API_BASE}/obtener_casos.php${qs}`, { credentials: 'include' }),
+        fetch(`${API_BASE}/obtener_equipos.php${qs}`, { credentials: 'include' })
       ]);
       
       const dataCasos = await casosRes.json();
@@ -137,7 +138,7 @@ export default function ViewRecords() {
     e.preventDefault();
     if (!editingEquipo) return;
     try {
-      const response = await fetch('backend/actualizar_equipo.php', {
+      const response = await fetch(`${API_BASE}/actualizar_equipo.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -168,7 +169,7 @@ export default function ViewRecords() {
     e.preventDefault();
     if (!editingCaso) return;
     try {
-      const response = await fetch('backend/actualizar_caso.php', {
+      const response = await fetch(`${API_BASE}/actualizar_caso.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -218,7 +219,7 @@ export default function ViewRecords() {
       return;
     }
     try {
-      const response = await fetch('backend/eliminar_equipo.php', {
+      const response = await fetch(`${API_BASE}/eliminar_equipo.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
@@ -242,7 +243,7 @@ export default function ViewRecords() {
       return;
     }
     try {
-      const response = await fetch('backend/eliminar_caso.php', {
+      const response = await fetch(`${API_BASE}/eliminar_caso.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
@@ -385,7 +386,7 @@ export default function ViewRecords() {
         queryParams.append('personal', 'true');
       }
     }
-    return `backend/exportar_excel.php?${queryParams.toString()}`;
+    return `${API_BASE}/exportar_excel.php?${queryParams.toString()}`;
   };
 
   return (

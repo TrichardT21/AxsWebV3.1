@@ -6,6 +6,7 @@ import {
   Trash2, ShieldAlert, Award, FileText, Database, Shield, Lock, Check, X 
 } from 'lucide-react';
 import homeVideo from './assets/home.mp4';
+import { API_BASE } from '../config/api';
 
 export default function AdminDashboard() {
   const { startViewingAsTechnician, user: currentUser } = useAuth();
@@ -39,7 +40,7 @@ export default function AdminDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('backend/admin_usuarios.php', {
+      const res = await fetch(`${API_BASE}/admin_usuarios.php`, {
         method: 'GET',
         credentials: 'include',
       });
@@ -65,7 +66,7 @@ export default function AdminDashboard() {
   const handleAprobar = async (id) => {
     if (!confirm('¿Aprobar esta solicitud de cuenta?')) return;
     try {
-      const res = await fetch('backend/admin_usuarios.php', {
+      const res = await fetch(`${API_BASE}/admin_usuarios.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accion: 'aprobar', id }),
@@ -86,7 +87,7 @@ export default function AdminDashboard() {
   const handleRechazar = async (id) => {
     if (!confirm('¿Rechazar y eliminar físicamente esta solicitud de cuenta?')) return;
     try {
-      const res = await fetch('backend/admin_usuarios.php', {
+      const res = await fetch(`${API_BASE}/admin_usuarios.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accion: 'rechazar', id }),
@@ -117,7 +118,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      const res = await fetch('backend/admin_usuarios.php', {
+      const res = await fetch(`${API_BASE}/admin_usuarios.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -167,7 +168,7 @@ export default function AdminDashboard() {
     setFormError(null);
 
     try {
-      const res = await fetch('backend/admin_usuarios.php', {
+      const res = await fetch(`${API_BASE}/admin_usuarios.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -200,7 +201,7 @@ export default function AdminDashboard() {
   const handleDesactivar = async (id) => {
     if (!confirm('¿Estás seguro de desactivar (marcar inactivo) a este usuario?')) return;
     try {
-      const res = await fetch('backend/admin_usuarios.php', {
+      const res = await fetch(`${API_BASE}/admin_usuarios.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
