@@ -31,15 +31,15 @@ export const AuthProvider = ({ children }) => {
           .eq('id', session.user.id)
           .single();
         if (profile) {
-          setUser(profile);
+          if (profile.estado === 'pendiente' || profile.estado === 'inactivo') {
+            await supabase.auth.signOut();
+            setUser(null);
+          } else {
+            setUser(profile);
+          }
         } else {
-          setUser({
-            id: session.user.id,
-            usuario: session.user.email,
-            nombre: session.user.user_metadata.nombre || session.user.email,
-            rol: session.user.user_metadata.rol || 'tecnico',
-            estado: session.user.user_metadata.estado || 'pendiente'
-          });
+          await supabase.auth.signOut();
+          setUser(null);
         }
       } else {
         setUser(null);

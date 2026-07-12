@@ -304,7 +304,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Pestañas de Navegación */}
-        <div className="flex border-b border-white/10 gap-2">
+        <div className="flex border-b border-white/10 gap-2 overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {[
             { id: 'supervisar', label: 'Panel de Supervisión', badge: activeTechnicians.length, icon: Eye },
             { id: 'solicitudes', label: 'Solicitudes Pendientes', badge: pendingRequests.length, icon: ShieldAlert, badgeColor: 'bg-amber-600/80' },
@@ -316,7 +316,7 @@ export default function AdminDashboard() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 py-4 px-6 font-semibold text-xs uppercase tracking-wider relative transition-all ${isActive ? 'text-blue-400' : 'text-gray-400 hover:text-white'}`}
+                className={`shrink-0 flex items-center gap-2 py-4 px-6 font-semibold text-xs uppercase tracking-wider relative transition-all ${isActive ? 'text-blue-400' : 'text-gray-400 hover:text-white'}`}
               >
                 <Icon size={14} />
                 <span>{tab.label}</span>

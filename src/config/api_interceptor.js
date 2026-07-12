@@ -40,10 +40,23 @@ window.fetch = async function (input, init) {
     const { data: { session } } = await supabase.auth.getSession();
     const currentUser = session?.user;
 
+    if (currentUser && endpoint !== 'login.php' && endpoint !== 'logout.php' && endpoint !== 'verificar_sesion.php') {
+      const { data: currentProfile } = await supabase.from('usuarios').select('estado').eq('id', currentUser.id).maybeSingle();
+      if (currentProfile && (currentProfile.estado === 'pendiente' || currentProfile.estado === 'inactivo')) {
+        await supabase.auth.signOut();
+        window.location.reload();
+        return mockResponse({ success: false, error: 'Tu cuenta ha sido bloqueada o puesta en espera.' }, 401);
+      }
+    }
+
     switch (endpoint) {
       case 'verificar_sesion.php': {
         if (!currentUser) return mockResponse({ success: false });
         const { data: profile } = await supabase.from('usuarios').select('*').eq('id', currentUser.id).maybeSingle();
+        if (profile && (profile.estado === 'pendiente' || profile.estado === 'inactivo')) {
+          await supabase.auth.signOut();
+          return mockResponse({ success: false });
+        }
         return mockResponse({
           success: true,
           usuario: profile || {
@@ -51,7 +64,7 @@ window.fetch = async function (input, init) {
             nombre: currentUser.user_metadata.nombre || currentUser.email,
             usuario: currentUser.email,
             rol: currentUser.user_metadata.rol || 'tecnico',
-            estado: currentUser.user_metadata.estado || 'activo'
+            estado: 'activo'
           }
         });
       }
