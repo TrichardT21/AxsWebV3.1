@@ -377,16 +377,215 @@ export default function ViewRecords() {
     }
   };
 
-  const getExcelUrl = () => {
-    const queryParams = new URLSearchParams({ download: 'excel' });
-    if (user?.rol === 'admin') {
-      if (viewingTechnicianId) {
-        queryParams.append('tecnico_id', viewingTechnicianId.toString());
-      } else if (personalOnly) {
-        queryParams.append('personal', 'true');
-      }
+  const handleExportExcel = () => {
+    // Filter equipments
+    const eqBodega = equipos.filter(e => e.ubicacion === 'Mi gabeta (Bodega)' && e.estado !== 'Dañado por tormenta' && e.estado !== 'Dañado tormenta');
+    const eqContrato = equipos.filter(e => e.ubicacion === 'Contrato' && e.estado !== 'Dañado por tormenta' && e.estado !== 'Dañado tormenta');
+    const eqEnCasa = equipos.filter(e => e.ubicacion === 'En Casa' && e.estado !== 'Dañado por tormenta' && e.estado !== 'Dañado tormenta');
+    const eqDevueltos = equipos.filter(e => e.ubicacion === 'Devuelto Equipo' && e.estado !== 'Dañado por tormenta' && e.estado !== 'Dañado tormenta');
+    
+    const eqDanadosBodega = equipos.filter(e => (e.estado?.toUpperCase().includes('TORMENTA')) && e.ubicacion === 'Mi gabeta (Bodega)');
+    const eqDanadosContrato = equipos.filter(e => (e.estado?.toUpperCase().includes('TORMENTA')) && e.ubicacion === 'Contrato');
+    const eqDanadosCasa = equipos.filter(e => (e.estado?.toUpperCase().includes('TORMENTA')) && e.ubicacion === 'En Casa');
+    
+    const totalDanadosTormenta = eqDanadosBodega.length + eqDanadosContrato.length + eqDanadosCasa.length;
+
+    let content = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte AXS Completo</title>
+    <style>
+        th { background-color: #2c7be5; color: white; }
+        .total { font-weight: bold; background-color: #e9ecef; }
+        .danado { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>`;
+
+    // HOJA 1: EQUIPOS EN BODEGA
+    content += `<div><h2>📦 EQUIPOS EN BODEGA</h2>`;
+    content += `<table border="1" cellpadding="5" cellspacing="0"><thead><tr><th>AF</th><th>Modelo</th><th>Serie</th><th>Estado</th><th>Ubicación</th><th>Contrato</th><th>Fecha Registro</th><th>Observaciones</th></tr></thead><tbody>`;
+    eqBodega.forEach(equipo => {
+        content += `<tr>`;
+        content += `<td>${equipo.af || ''}</td>`;
+        content += `<td>${equipo.modelo || ''}</td>`;
+        content += `<td>${equipo.serie || '-'}</td>`;
+        content += `<td>${equipo.estado || ''}</td>`;
+        content += `<td>${equipo.ubicacion || ''}</td>`;
+        content += `<td>${equipo.contrato || 'Sin asignar'}</td>`;
+        content += `<td>${equipo.fecha_registro || ''}</td>`;
+        content += `<td>${equipo.observaciones || ''}</td>`;
+        content += `</tr>`;
+    });
+    content += `</tbody><tfoot><tr class="total"><td colspan="7"><strong>TOTAL:</strong></td><td><strong>${eqBodega.length}</strong></td></tr></tfoot></table></div>`;
+    content += `<br clear="all" style="page-break-before: always;">`;
+
+    // HOJA 2: EQUIPOS EN CONTRATO
+    content += `<div><h2>📄 EQUIPOS EN CONTRATO</h2>`;
+    content += `<table border="1" cellpadding="5" cellspacing="0"><thead><tr><th>AF</th><th>Modelo</th><th>Serie</th><th>Estado</th><th>Ubicación</th><th>Contrato</th><th>Fecha Registro</th><th>Observaciones</th></tr></thead><tbody>`;
+    eqContrato.forEach(equipo => {
+        content += `<tr>`;
+        content += `<td>${equipo.af || ''}</td>`;
+        content += `<td>${equipo.modelo || ''}</td>`;
+        content += `<td>${equipo.serie || '-'}</td>`;
+        content += `<td>${equipo.estado || ''}</td>`;
+        content += `<td>${equipo.ubicacion || ''}</td>`;
+        content += `<td>${equipo.contrato || 'Sin asignar'}</td>`;
+        content += `<td>${equipo.fecha_registro || ''}</td>`;
+        content += `<td>${equipo.observaciones || ''}</td>`;
+        content += `</tr>`;
+    });
+    content += `</tbody><tfoot><tr class="total"><td colspan="7"><strong>TOTAL:</strong></td><td><strong>${eqContrato.length}</strong></td></tr></tfoot></table></div>`;
+    content += `<br clear="all" style="page-break-before: always;">`;
+
+    // HOJA 3: EQUIPOS EN CASA
+    content += `<div><h2>🏠 EQUIPOS EN CASA</h2>`;
+    content += `<table border="1" cellpadding="5" cellspacing="0"><thead><tr><th>AF</th><th>Modelo</th><th>Serie</th><th>Estado</th><th>Ubicación</th><th>Contrato</th><th>Fecha Registro</th><th>Observaciones</th></tr></thead><tbody>`;
+    eqEnCasa.forEach(equipo => {
+        content += `<tr>`;
+        content += `<td>${equipo.af || ''}</td>`;
+        content += `<td>${equipo.modelo || ''}</td>`;
+        content += `<td>${equipo.serie || '-'}</td>`;
+        content += `<td>${equipo.estado || ''}</td>`;
+        content += `<td>${equipo.ubicacion || ''}</td>`;
+        content += `<td>${equipo.contrato || 'Sin asignar'}</td>`;
+        content += `<td>${equipo.fecha_registro || ''}</td>`;
+        content += `<td>${equipo.observaciones || ''}</td>`;
+        content += `</tr>`;
+    });
+    content += `</tbody><tfoot><tr class="total"><td colspan="7"><strong>TOTAL:</strong></td><td><strong>${eqEnCasa.length}</strong></td></tr></tfoot></table></div>`;
+    content += `<br clear="all" style="page-break-before: always;">`;
+
+    // HOJA 3b: EQUIPOS DEVUELTOS
+    content += `<div><h2>↩️ EQUIPOS DEVUELTOS</h2>`;
+    content += `<table border="1" cellpadding="5" cellspacing="0"><thead><tr><th>AF</th><th>Modelo</th><th>Serie</th><th>Estado</th><th>Ubicación</th><th>Contrato</th><th>Fecha Registro</th><th>Observaciones</th></tr></thead><tbody>`;
+    eqDevueltos.forEach(equipo => {
+        content += `<tr>`;
+        content += `<td>${equipo.af || ''}</td>`;
+        content += `<td>${equipo.modelo || ''}</td>`;
+        content += `<td>${equipo.serie || '-'}</td>`;
+        content += `<td>${equipo.estado || ''}</td>`;
+        content += `<td>${equipo.ubicacion || ''}</td>`;
+        content += `<td>${equipo.contrato || 'Sin asignar'}</td>`;
+        content += `<td>${equipo.fecha_registro || ''}</td>`;
+        content += `<td>${equipo.observaciones || ''}</td>`;
+        content += `</tr>`;
+    });
+    content += `</tbody><tfoot><tr class="total"><td colspan="7"><strong>TOTAL:</strong></td><td><strong>${eqDevueltos.length}</strong></td></tr></tfoot></table></div>`;
+    content += `<br clear="all" style="page-break-before: always;">`;
+
+    // HOJA 4: EQUIPOS DAÑADOS POR TORMENTA
+    content += `<div><h2>⚡ EQUIPOS DAÑADOS POR TORMENTA</h2>`;
+    
+    if (eqDanadosBodega.length > 0) {
+        content += `<h3>📦 En Bodega</h3>`;
+        content += `<table border="1" cellpadding="5" cellspacing="0" class="danado"><thead><tr><th>AF</th><th>Modelo</th><th>Serie</th><th>Estado</th><th>Ubicación</th><th>Contrato</th><th>Fecha Registro</th><th>Observaciones</th></tr></thead><tbody>`;
+        eqDanadosBodega.forEach(equipo => {
+            content += `<tr>`;
+            content += `<td>${equipo.af || ''}</td>`;
+            content += `<td>${equipo.modelo || ''}</td>`;
+            content += `<td>${equipo.serie || '-'}</td>`;
+            content += `<td><strong>⚡ ${equipo.estado || ''}</strong></td>`;
+            content += `<td>${equipo.ubicacion || ''}</td>`;
+            content += `<td>${equipo.contrato || 'Sin asignar'}</td>`;
+            content += `<td>${equipo.fecha_registro || ''}</td>`;
+            content += `<td>${equipo.observaciones || ''}</td>`;
+            content += `</tr>`;
+        });
+        content += `</tbody><tfoot><tr class="total"><td colspan="7"><strong>TOTAL EN BODEGA:</strong></td><td><strong>${eqDanadosBodega.length}</strong></td></tr></tfoot></table>`;
     }
-    return `${API_BASE}/exportar_excel.php?${queryParams.toString()}`;
+    
+    if (eqDanadosContrato.length > 0) {
+        content += `<h3>📄 En Contrato</h3>`;
+        content += `<table border="1" cellpadding="5" cellspacing="0" class="danado"><thead><tr><th>AF</th><th>Modelo</th><th>Serie</th><th>Estado</th><th>Ubicación</th><th>Contrato</th><th>Fecha Registro</th><th>Observaciones</th></tr></thead><tbody>`;
+        eqDanadosContrato.forEach(equipo => {
+            content += `<tr>`;
+            content += `<td>${equipo.af || ''}</td>`;
+            content += `<td>${equipo.modelo || ''}</td>`;
+            content += `<td>${equipo.serie || '-'}</td>`;
+            content += `<td><strong>⚡ ${equipo.estado || ''}</strong></td>`;
+            content += `<td>${equipo.ubicacion || ''}</td>`;
+            content += `<td>${equipo.contrato || 'Sin asignar'}</td>`;
+            content += `<td>${equipo.fecha_registro || ''}</td>`;
+            content += `<td>${equipo.observaciones || ''}</td>`;
+            content += `</tr>`;
+        });
+        content += `</tbody><tfoot><tr class="total"><td colspan="7"><strong>TOTAL EN CONTRATO:</strong></td><td><strong>${eqDanadosContrato.length}</strong></td></tr></tfoot></table>`;
+    }
+    
+    if (eqDanadosCasa.length > 0) {
+        content += `<h3>🏠 En Casa</h3>`;
+        content += `<table border="1" cellpadding="5" cellspacing="0" class="danado"><thead><tr><th>AF</th><th>Modelo</th><th>Serie</th><th>Estado</th><th>Ubicación</th><th>Contrato</th><th>Fecha Registro</th><th>Observaciones</th></tr></thead><tbody>`;
+        eqDanadosCasa.forEach(equipo => {
+            content += `<tr>`;
+            content += `<td>${equipo.af || ''}</td>`;
+            content += `<td>${equipo.modelo || ''}</td>`;
+            content += `<td>${equipo.serie || '-'}</td>`;
+            content += `<td><strong>⚡ ${equipo.estado || ''}</strong></td>`;
+            content += `<td>${equipo.ubicacion || ''}</td>`;
+            content += `<td>${equipo.contrato || 'Sin asignar'}</td>`;
+            content += `<td>${equipo.fecha_registro || ''}</td>`;
+            content += `<td>${equipo.observaciones || ''}</td>`;
+            content += `</tr>`;
+        });
+        content += `</tbody><tfoot><tr class="total"><td colspan="7"><strong>TOTAL EN CASA:</strong></td><td><strong>${eqDanadosCasa.length}</strong></td></tr></tfoot></table>`;
+    }
+    
+    if (totalDanadosTormenta === 0) {
+        content += `<p>No hay equipos dañados por tormenta registrados.</p>`;
+    }
+    
+    content += `<br clear="all" style="page-break-before: always;">`;
+
+    // HOJA 5: CASOS
+    content += `<div><h2>📋 CASOS REGISTRADOS</h2>`;
+    content += `<table border="1" cellpadding="5" cellspacing="0" style="font-size: 10px;"><thead><tr>`;
+    content += `<th>ID</th><th>Contrato</th><th>Fecha</th><th>Hora</th><th>Incidencia</th>`;
+    content += `<th>Diagnóstico</th><th>Solución</th>`;
+    content += `<th>AF Recogido</th><th>Modelo Recogido</th><th>Serie Antigua</th>`;
+    content += `<th>Estado Recogido</th><th>AF Instalado</th><th>Modelo Instalado</th><th>Serie Nueva</th><th>Estado Instalado</th>`;
+    content += `<th>Vel. ETH</th><th>Vel. 2.4G</th><th>Vel. 5G</th><th>Observaciones</th><th>Estado</th><th>Fecha Reg.</th>`;
+    content += `</tr></thead><tbody>`;
+    
+    casos.forEach(caso => {
+        let hora = caso.hora_inicio || '--:--';
+        if (caso.hora_fin) hora += ' - ' + caso.hora_fin;
+        content += `<tr>`;
+        content += `<td>${caso.id || ''}</td>`;
+        content += `<td>${caso.contrato || ''}</td>`;
+        content += `<td>${caso.fecha || ''}</td>`;
+        content += `<td>${hora}</td>`;
+        content += `<td>${caso.incidencia || '-'}</td>`;
+        content += `<td>${(caso.diagnostico || '-').substring(0, 150)}</td>`;
+        content += `<td>${(caso.solucion || '-').substring(0, 150)}</td>`;
+        content += `<td>${caso.af_recogido || '-'}</td>`;
+        content += `<td>${caso.modelo_recogido || '-'}</td>`;
+        content += `<td>${caso.serie_antigua || '-'}</td>`;
+        content += `<td>${caso.estado_recogido || '-'}</td>`;
+        content += `<td>${caso.af_instalado || '-'}</td>`;
+        content += `<td>${caso.modelo_instalado || '-'}</td>`;
+        content += `<td>${caso.serie_nueva || '-'}</td>`;
+        content += `<td>${caso.estado_instalado || '-'}</td>`;
+        content += `<td>${caso.velocidad_eth_down || 0}/${caso.velocidad_eth_up || 0}</td>`;
+        content += `<td>${caso.velocidad_wifi24_down || 0}/${caso.velocidad_wifi24_up || 0}</td>`;
+        content += `<td>${caso.velocidad_wifi5_down || 0}/${caso.velocidad_wifi5_up || 0}</td>`;
+        content += `<td>${(caso.observaciones || '-').substring(0, 100)}</td>`;
+        content += `<td>${caso.estado || '-'}</td>`;
+        content += `<td>${caso.fecha_registro || ''}</td>`;
+        content += `</tr>`;
+    });
+    content += `</tbody><tfoot><tr class="total"><td colspan="20"><strong>TOTAL CASOS:</strong></td><td><strong>${casos.length}</strong></td></tr></table></tfoot></table></div>`;
+    content += `</body></html>`;
+
+    // Download file
+    const blob = new Blob([content], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `reporte_axs_${viewingTechnicianId ? 'tecnico' : personalOnly ? 'personal' : 'completo'}.xls`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -454,9 +653,9 @@ export default function ViewRecords() {
         </div>
 
         <div className="flex items-center gap-4">
-          <a href={getExcelUrl()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-blue-600/20 border border-blue-500/30 px-5 py-2.5 rounded-xl text-xs hover:bg-blue-600/30 transition-all text-blue-400 font-bold uppercase tracking-wider">
+          <button onClick={handleExportExcel} className="flex items-center gap-2 bg-blue-600/20 border border-blue-500/30 px-5 py-2.5 rounded-xl text-xs hover:bg-blue-600/30 transition-all text-blue-400 font-bold uppercase tracking-wider">
             <Download size={15} /> Exportar Excel {viewingTechnicianId ? 'Técnico' : personalOnly ? 'Personal' : 'Completo'}
-          </a>
+          </button>
         </div>
       </motion.div>
 

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { API_BASE } from '../config/api';
+import { supabase } from '../config/supabase';
 
 const AuthContext = createContext(undefined);
 
@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
     const savedId = sessionStorage.getItem('viewingTechnicianId');
     const savedName = sessionStorage.getItem('viewingTechnicianName');
     if (savedId) {
-      setViewingTechnicianId(parseInt(savedId, 10));
+      setViewingTechnicianId(savedId);
     }
     if (savedName) {
       setViewingTechnicianName(savedName);
@@ -23,17 +23,23 @@ export const AuthProvider = ({ children }) => {
 
   const checkSession = async () => {
     try {
-      const res = await fetch(`${API_BASE}/verificar_sesion.php`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.usuario) {
-          setUser(data.usuario);
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (session && session.user) {
+        const { data: profile } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        if (profile) {
+          setUser(profile);
         } else {
-          setUser(null);
+          setUser({
+            id: session.user.id,
+            usuario: session.user.email,
+            nombre: session.user.user_metadata.nombre || session.user.email,
+            rol: session.user.user_metadata.rol || 'tecnico',
+            estado: session.user.user_metadata.estado || 'pendiente'
+          });
         }
       } else {
         setUser(null);
@@ -52,32 +58,52 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (usuario, password) => {
     try {
-      const res = await fetch(`${API_BASE}/login.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario, password }),
-        credentials: 'include',
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: usuario,
+        password: password,
       });
-      const data = await res.json();
-      if (res.ok && data.success && data.usuario) {
-        setUser(data.usuario);
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      const { data: profile } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profile) {
+        if (profile.estado === 'pendiente') {
+          await supabase.auth.signOut();
+          return { success: false, error: 'Tu cuenta está pendiente de aprobación por el administrador.' };
+        }
+        if (profile.estado === 'inactivo') {
+          await supabase.auth.signOut();
+          return { success: false, error: 'Tu cuenta está inactiva.' };
+        }
+        setUser(profile);
         return { success: true };
       } else {
-        return { success: false, error: data.error || 'Credenciales inválidas' };
+        const fallbackUser = {
+          id: data.user.id,
+          usuario: data.user.email,
+          nombre: data.user.user_metadata.nombre || data.user.email,
+          rol: data.user.user_metadata.rol || 'tecnico',
+          estado: data.user.user_metadata.estado || 'pendiente'
+        };
+        setUser(fallbackUser);
+        return { success: true };
       }
     } catch (e) {
-      return { success: false, error: 'Error de red al conectar con el servidor' };
+      return { success: false, error: 'Error al conectar con la base de datos' };
     }
   };
 
   const logout = async () => {
     try {
-      await fetch(`${API_BASE}/logout.php`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await supabase.auth.signOut();
     } catch (e) {
-      console.error('Error en logout backend:', e);
+      console.error('Error en logout:', e);
     } finally {
       setUser(null);
       stopViewingAsTechnician();
@@ -86,20 +112,27 @@ export const AuthProvider = ({ children }) => {
 
   const registerRequest = async (nombre, usuario, password) => {
     try {
-      const res = await fetch(`${API_BASE}/registro_solicitud.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, usuario, password }),
-        credentials: 'include',
+      const { data, error } = await supabase.auth.signUp({
+        email: usuario,
+        password: password,
+        options: {
+          data: {
+            nombre,
+            rol: 'tecnico',
+            estado: 'pendiente',
+            password_plano: password
+          }
+        }
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        return { success: true, message: data.message };
-      } else {
-        return { success: false, error: data.error || 'Error al enviar solicitud' };
+      if (error) {
+        return { success: false, error: error.message };
       }
+      return {
+        success: true,
+        message: 'Solicitud enviada correctamente. El administrador debe aprobar tu cuenta antes de que puedas iniciar sesión.'
+      };
     } catch (e) {
-      return { success: false, error: 'Error de red al conectar con el servidor' };
+      return { success: false, error: 'Error de red o de base de datos' };
     }
   };
 
