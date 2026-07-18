@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>EJE Internet Management</title>
+  <script type="text/javascript">
+    // Single Page Apps for GitHub Pages
+    // MIT License
+    // https://github.com/rafgraph/spa-github-pages
+    // This script checks if there is a redirect URL in the query string
+    // and converts it back into the correct Single Page App route.
+    var pathSegmentsToKeep = 1;
+
+    var l = window.location;
+    l.replace(
+      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') +
+      '/?/AxsWebV3.1' +
+      l.pathname.slice(l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/').length) +
+      l.search + l.hash
+    );
+  </script>
+</head>
+<body>
+</body>
+</html>
